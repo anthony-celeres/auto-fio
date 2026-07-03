@@ -1,0 +1,38 @@
+#!/bin/sh
+# auto-fio local guardrail — mirrors the intended GitHub branch-protection
+# rules so violations are caught before they leave your machine.
+#
+# Enforces:
+#   1. No direct pushes to `main` (use a feature branch + PR).
+#   2. No AI co-author trailers (Co-Authored-By: Claude/Anthropic).
+#
+# Enable once per clone:
+#   git config core.hooksPath .githooks
+
+protected="main"
+z40="0000000000000000000000000000000000000000"
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+	case "$remote_ref" in
+		refs/heads/"$protected")
+			echo "✖ Direct pushes to '$protected' are blocked. Open a PR from a feature branch." >&2
+			exit 1
+			;;
+	esac
+
+	if [ "$local_sha" = "$z40" ]; then
+		continue
+	fi
+	if [ "$remote_sha" = "$z40" ]; then
+		range="$local_sha"
+	else
+		range="$remote_sha..$local_sha"
+	fi
+
+	if git log "$range" --format='%B' 2>/dev/null | grep -qiE 'Co-Authored-By:[[:space:]]*(Claude|Anthropic)'; then
+		echo "✖ A commit contains a Claude/Anthropic co-author trailer. Remove it before pushing." >&2
+		exit 1
+	fi
+done
+
+exit 0
