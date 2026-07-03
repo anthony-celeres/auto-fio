@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 
+from .hints import fio_missing_warning
 from .profiler import _DEFAULT_FILE_SIZE, profile
 
 
@@ -51,6 +53,12 @@ def main(argv: list[str] | None = None) -> int:
         backend=args.backend,
         threshold=args.threshold,
     )
+
+    # Nudge toward the gold-standard backend if we silently fell back off fio.
+    # Always to stderr so machine-readable stdout (--json) stays clean.
+    warning = fio_missing_warning(args.backend, result.backend)
+    if warning is not None:
+        print(warning, file=sys.stderr)
 
     if args.json:
         print(
