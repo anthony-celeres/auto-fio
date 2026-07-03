@@ -17,9 +17,34 @@ that — sweep, measure, detect the knee, return the number.
 
 ## Install
 
+**Prerequisite: install `fio`.** `auto-fio` drives the [`fio`](https://fio.readthedocs.io/)
+benchmark for its gold-standard measurements (it uses `--direct=1` to bypass the
+OS page cache). Install it first so it's on your `PATH`:
+
+```bash
+# macOS
+brew install fio
+# Debian/Ubuntu
+sudo apt install fio
+# Fedora/RHEL
+sudo dnf install fio
+```
+
+Then install `auto-fio`:
+
 ```bash
 pip install auto-fio
 ```
+
+> Without `fio`, `auto-fio` falls back to a portable, zero-dependency `python`
+> backend so a result is always available — but its numbers can be optimistic
+> where the OS caches the file. Install `fio` for publication-grade accuracy.
+> See [Backends](#backends).
+>
+> If `fio` is missing, `auto-fio` **tells you at runtime** (on stderr) with the
+> exact install command for your OS, then continues on the `python` backend —
+> it never installs anything or touches your system for you. `--json` stdout
+> stays clean. Silence the notice with `--backend python`.
 
 ## Use it — command line
 
